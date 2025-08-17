@@ -15,7 +15,6 @@ scratch:
   resolution: 1024
   train_batch_size: 8 # has to fit gpu memory
   num_train_workers: 10
-  num_frames: 8
   max_num_objects: 3
   base_lr: 5.0e-6
   vision_lr: 3.0e-06
@@ -249,39 +248,39 @@ trainer:
 
   data:
     train:
-    _target_: training.dataset.sam2_datasets.TorchTrainMixedDataset
-    phases_per_epoch: ${scratch.phases_per_epoch}
-    batch_sizes:
-      - ${scratch.train_batch_size}
-
-    datasets:
-      # We only have one dataset in this list.
-      - _target_: training.dataset.vos_dataset.VOSDataset
-        # We need to define the image transforms. Let's create a new 'image_transforms' block for clarity.
-        transforms: ${image.train_transforms}
-        training: true
-        video_dataset:
-          # --- THE MOST IMPORTANT CHANGE ---
-          # Point to our new custom raw dataset class
-          _target_: training.dataset.custom_coco_dataset.GorillaCOCORawDataset
-          # Use the variables we defined at the top of the file
-          img_folder: ${gorilla_dataset.img_folder}
-          gt_file: ${gorilla_dataset.gt_file}
-          file_list_txt: ${gorilla_dataset.file_list_txt}
-        sampler:
-          _target_: training.dataset.vos_sampler.RandomUniformSampler
-          num_frames: ${gorilla_dataset.num_frames} 
-          max_num_objects: ${gorilla_dataset.max_num_objects}
-        multiplier: ${gorilla_dataset.multiplier}
-    
-    shuffle: True
-    num_workers: ${scratch.num_train_workers}
-    pin_memory: True
-    drop_last: True
-    collate_fn:
-      _target_: training.utils.data_utils.collate_fn
-      _partial_: true
-      dict_key: all
+      _target_: training.dataset.sam2_datasets.TorchTrainMixedDataset
+      phases_per_epoch: ${scratch.phases_per_epoch}
+      batch_sizes:
+        - ${scratch.train_batch_size}
+  
+      datasets:
+        # We only have one dataset in this list.
+        - _target_: training.dataset.vos_dataset.VOSDataset
+          # We need to define the image transforms. Let's create a new 'image_transforms' block for clarity.
+          transforms: ${image.train_transforms}
+          training: true
+          video_dataset:
+            # --- THE MOST IMPORTANT CHANGE ---
+            # Point to our new custom raw dataset class
+            _target_: training.dataset.custom_coco_dataset.GorillaCOCORawDataset
+            # Use the variables we defined at the top of the file
+            img_folder: ${gorilla_dataset.img_folder}
+            gt_file: ${gorilla_dataset.gt_file}
+            file_list_txt: ${gorilla_dataset.file_list_txt}
+          sampler:
+            _target_: training.dataset.vos_sampler.RandomUniformSampler
+            num_frames: ${gorilla_dataset.num_frames} 
+            max_num_objects: ${gorilla_dataset.max_num_objects}
+          multiplier: ${gorilla_dataset.multiplier}
+      
+      shuffle: True
+      num_workers: ${scratch.num_train_workers}
+      pin_memory: True
+      drop_last: True
+      collate_fn:
+        _target_: training.utils.data_utils.collate_fn
+        _partial_: true
+        dict_key: all
 
   optim:
     amp:
@@ -362,7 +361,7 @@ trainer:
     model_weight_initializer:
       _partial_: True
       _target_: training.utils.checkpoint_utils.load_state_dict_into_model
-      strict: True
+      strict: True #maybe False oder ignore_missing_keys
       ignore_unexpected_keys: null
       ignore_missing_keys: null
 
