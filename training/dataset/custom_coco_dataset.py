@@ -15,12 +15,12 @@ class GorillaCOCORawDataset(VOSRawDataset):
     This class returns VOSVideo and COCOSegmentLoader objects.
     """
     def __init__(self, img_folder: str, gt_file: str, **kwargs):
-        self.img_folder = img_folder
         self.coco = COCO(gt_file)
-        # Get a list of all image IDs that have annotations
-        self.image_ids = sorted(self.coco.getImgIds())
+        # collect image_ids that actually have anns
+        ann_ids_all = self.coco.getAnnIds()
+        self.annotations_all = self.coco.loadAnns(ann_ids_all)
+        self.image_ids = sorted(set([ann['image_id'] for ann in self.annotations_all]))
         
-        # We can think of each "image" as a "video" of length 1
         self.video_names = [self.coco.loadImgs(img_id)[0]['file_name'] for img_id in self.image_ids]
 
     def get_video(self, idx: int):
@@ -67,11 +67,11 @@ class COCOSegmentLoader(SegmentLoader):
         object_id is the index into our list of annotations for this image.
         """
         if object_id >= len(self.annotations):
-            return None # No such object
-        
+            return None
         ann = self.annotations[object_id]
-        mask = self.coco.annToMask(ann)
-        return torch.from_numpy(mask)
+        mask = self.coco.annToMask(ann).astype(np.uint8)    # 0/1 np.uint8
+        mask_t = torch.from_numpy(mask).unsqueeze(0)        # shape [1, H, W]
+        return mask_t
 
     @property
     def num_objects(self) -> int:
