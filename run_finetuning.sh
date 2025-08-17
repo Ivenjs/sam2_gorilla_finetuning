@@ -1,15 +1,18 @@
 #!/bin/bash
-#SBATCH --job-name=gamma_sweep
+#SBATCH --job-name=sam_finetuning
 #SBATCH --chdir=/sc/home/iven.schlegelmilch/sam2_gorilla_finetuning
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --gpus=1
-#SBATCH --time=1-00:00:00
-#SBATCH -w gx08,gx09,gx11,gx12,gx13
+#SBATCH --mem=100G
+#SBATCH --cpus-per-task=20
+#SBATCH --time=6:00:00
+#SBATCH --gres=gpu:h100:1
 #SBATCH -p aisc 
 #SBATCH --account=aisc 
 #SBATCH --qos=aisc 
-#SBATCH --output=logs/%x-%j.out
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=slack:iven.schlegelmilch
+#SBATCH --output=logs/%x-%j.out    # %x = jobname, %j = jobid
 #SBATCH --error=logs/%x-%j.err
 #SBATCH --export=ALL
 
@@ -20,7 +23,7 @@ srun --container-image=/sc/home/iven.schlegelmilch/ivenschlegelmilch+gorillawatc
      bash -c "cd /workspaces/sam2_gorilla_finetuning && \
               /opt/conda/envs/research/bin/python training/train.py \
               -c /sam2/configs/sam2.1_training/sam2.1_hiera_b+_gorilla_finetune.yaml \
-              --use-cluster 1 \
+              --use-cluster 0 \
               --num-gpus \$SLURM_GPUS_ON_NODE \
               --num-nodes \$SLURM_JOB_NUM_NODES \
               --partition \$SLURM_JOB_PARTITION \
